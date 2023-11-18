@@ -4,13 +4,13 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-// HACK: should figure this out at runtime using gamedata, so there's no need
-// to compile separately for each platform.
+// HACK: should figure this out at runtime using gamedata, so this "just works".
 #define PLATFORM_LINUX32 0
 #define PLATFORM_WIN32 1
-#define SERVER_PLATFORM PLATFORM_LINUX32 // Set this when compiling!!
+#define PLATFORM_CHANGE_ME 0xDEADBEEF
+#define SERVER_PLATFORM ((( PLATFORM_CHANGE_ME ))) // <-- CHANGE THIS!
 #if (SERVER_PLATFORM != PLATFORM_LINUX32 && SERVER_PLATFORM != PLATFORM_WIN32)
-#error Platform is unsupported.
+#error Please set SERVER_PLATFORM to PLATFORM_LINUX32 or PLATFORM_WIN32 before compiling.
 #endif
 
 // If the gamerules vtable index changes too often, flip this to try pattern
