@@ -4,18 +4,26 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-// HACK: should figure this out at runtime using gamedata, so this "just works".
-#define PLATFORM_LINUX32 0
-#define PLATFORM_WIN32 1
-#define PLATFORM_CHANGE_ME 0xDEADBEEF
-#define SERVER_PLATFORM ((( PLATFORM_CHANGE_ME ))) // <-- CHANGE THIS!
-#if (SERVER_PLATFORM != PLATFORM_LINUX32 && SERVER_PLATFORM != PLATFORM_WIN32)
-#error Please set SERVER_PLATFORM to PLATFORM_LINUX32 or PLATFORM_WIN32 before compiling.
-#endif
-
 // If the gamerules vtable index changes too often, flip this to try pattern
 // scanning, instead.
 #define USE_SIGSCAN false
+
+#define LINUX_GAMERULES_GETNEXTMAP_STR "@_ZN13CDYSGameRules16GetNextLevelNameEPci"
+
+bool IsLinux()
+{
+    static bool first_run = true;
+    static bool found;
+    if (first_run)
+    {
+        first_run = !first_run;
+        StartPrepSDKCall(SDKCall_GameRules);
+        char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
+        found = PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        EndPrepSDKCall();
+    }
+    return found;
+}
 
 public Plugin myinfo = {
     name = "Dystopia nextmap",
@@ -73,21 +81,19 @@ void PrintNextmap(int client)
     {
         StartPrepSDKCall(SDKCall_GameRules);
 #if(!USE_SIGSCAN)
-        int vtable_index =
-#if(SERVER_PLATFORM == PLATFORM_LINUX32)
-            0x2B8;
-#elseif(SERVER_PLATFORM == PLATFORM_WIN32)
-            0x2B4;
-#endif
+        int vtable_index = IsLinux() ? 0x2B8 : 0x2B4;
         PrepSDKCall_SetVirtual(vtable_index / 4);
 #else // USE_SIGSCAN
-        char sig[] =
-#if(SERVER_PLATFORM == PLATFORM_LINUX32)
-            "@_ZN13CDYSGameRules16GetNextLevelNameEPci";
-#elseif(SERVER_PLATFORM == PLATFORM_WIN32)
-            "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
-#endif
-        PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+		if (IsLinux())
+		{
+			char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
+			PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+		}
+		else
+		{
+			char sig[] = "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
+			PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+		}
 #endif
         PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
         PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
