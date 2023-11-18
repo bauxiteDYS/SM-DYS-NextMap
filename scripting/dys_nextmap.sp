@@ -8,7 +8,7 @@
 // scanning, instead.
 #define USE_SIGSCAN false
 
-#define LINUX_GAMERULES_GETNEXTMAP_STR "@_ZN13CDYSGameRules16GetNextLevelNameEPci"
+#define LINUX_GAMERULES_GETNEXTMAP_NAME "@_ZN13CDYSGameRules16GetNextLevelNameEPci"
 
 bool IsLinux()
 {
@@ -18,7 +18,7 @@ bool IsLinux()
     {
         first_run = !first_run;
         StartPrepSDKCall(SDKCall_GameRules);
-        char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
+        char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
         found = PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
         EndPrepSDKCall();
     }
@@ -86,7 +86,7 @@ void PrintNextmap(int client)
 #else // USE_SIGSCAN
         if (IsLinux())
         {
-            char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
+            char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
             PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
         }
         else
