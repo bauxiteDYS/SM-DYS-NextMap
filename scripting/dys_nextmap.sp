@@ -12,28 +12,26 @@ If this ever breaks with a game update, try flipping the #if(1) switch at around
 
 public Plugin myinfo = {
     name = "Dystopia nextmap",
-    description = "Print the Dystopia \"nextmap\" value to chat.",
+    description = "Print the Dystopia \"nextmap\" value to chat.\
+Works both from client console (SRCDS only), and from game chat.",
     author = "Rain",
     version = "0.1.0",
-    url = "https://gist.github.com/Rainyan/87d196b45c8928838d3e8d435306eaf3"
+    url = "https://github.com/bauxiteDYS/SM-DYS-NextMap"
 };
 
 public void OnPluginStart()
 {
-    // if you wanted to print the map from console message
-    RegConsoleCmd("nextmap", Cmd_NextMap);
-
-    // if you wanted to print the map from say message
-    if (!AddCommandListener(OnSay, "say") ||
+    if (!AddCommandListener(OnNextMap, "nextmap") ||
+        !AddCommandListener(OnSay, "say") ||
         !AddCommandListener(OnSay, "say_team"))
     {
         SetFailState("Failed to add command listener");
     }
 }
 
-public Action Cmd_NextMap(int client, int argc)
+public Action OnNextMap(int client, const char[] command, int argc)
 {
-    if (client != 0)
+    if (argc == 0 && client != 0)
     {
         PrintNextmap(client);
     }
@@ -50,12 +48,10 @@ public Action OnSay(int client, const char[] command, int argc)
     // (but don't equal) our target phrase
     char msg[7 + 1 + 1];
     GetCmdArg(1, msg, sizeof(msg));
-    if (!StrEqual(msg, "nextmap", false))
+    if (StrEqual(msg, "nextmap", false))
     {
-        return Plugin_Continue;
+        PrintNextmap(client);
     }
-
-    PrintNextmap(client);
     return Plugin_Continue;
 }
 
