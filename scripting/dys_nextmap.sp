@@ -81,8 +81,8 @@ void PrintNextmap(int client)
     {
         StartPrepSDKCall(SDKCall_GameRules);
 #if(!USE_SIGSCAN)
-        int vtable_index = IsLinux() ? 0x2B8 : 0x2B4;
-        PrepSDKCall_SetVirtual(vtable_index / 4);
+        int vtable_index = (IsLinux() ? 0x2B8 : 0x2B4) / 4;
+        PrepSDKCall_SetVirtual(vtable_index);
 #else // USE_SIGSCAN
         if (IsLinux())
         {
