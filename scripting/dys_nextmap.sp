@@ -4,11 +4,18 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-/**
-Print the Dystopia console command "nextmap" value to chat.
-Works both from client console (SRCDS only), and from game chat.
-If this ever breaks with a game update, try flipping the #if(1) switch at around line 69 to #if(0)
-**/
+// HACK: should figure this out at runtime using gamedata, so there's no need
+// to compile separately for each platform.
+#define PLATFORM_LINUX32 0
+#define PLATFORM_WIN32 1
+#define SERVER_PLATFORM PLATFORM_LINUX32 // Set this when compiling!!
+#if (SERVER_PLATFORM != PLATFORM_LINUX32 && SERVER_PLATFORM != PLATFORM_WIN32)
+#error Platform is unsupported.
+#endif
+
+// If the gamerules vtable index changes too often, flip this to try pattern
+// scanning, instead.
+#define USE_SIGSCAN false
 
 public Plugin myinfo = {
     name = "Dystopia nextmap",
@@ -65,11 +72,22 @@ void PrintNextmap(int client)
     if (call == INVALID_HANDLE)
     {
         StartPrepSDKCall(SDKCall_GameRules);
-#if(1)
-        PrepSDKCall_SetVirtual(0x2B4 / 4);
-#else
-        // If the vtable index changes a lot with game updates, this signature scan may work better
-        PrepSDKCall_SetSignature(SDKLibrary_Server, "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00", 9);
+#if(!USE_SIGSCAN)
+        int vtable_index =
+#if(SERVER_PLATFORM == PLATFORM_LINUX32)
+            0x2B8;
+#elseif(SERVER_PLATFORM == PLATFORM_WIN32)
+            0x2B4;
+#endif
+        PrepSDKCall_SetVirtual(vtable_index / 4);
+#else // USE_SIGSCAN
+        char sig[] =
+#if(SERVER_PLATFORM == PLATFORM_LINUX32)
+            "@_ZN13CDYSGameRules16GetNextLevelNameEPci";
+#elseif(SERVER_PLATFORM == PLATFORM_WIN32)
+            "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
+#endif
+        PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
 #endif
         PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
         PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
