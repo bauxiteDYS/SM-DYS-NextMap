@@ -84,16 +84,16 @@ void PrintNextmap(int client)
         int vtable_index = IsLinux() ? 0x2B8 : 0x2B4;
         PrepSDKCall_SetVirtual(vtable_index / 4);
 #else // USE_SIGSCAN
-		if (IsLinux())
-		{
-			char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
-			PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
-		}
-		else
-		{
-			char sig[] = "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
-			PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
-		}
+        if (IsLinux())
+        {
+            char sig[] = LINUX_GAMERULES_GETNEXTMAP_STR;
+            PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        }
+        else
+        {
+            char sig[] = "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
+            PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        }
 #endif
         PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
         PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
