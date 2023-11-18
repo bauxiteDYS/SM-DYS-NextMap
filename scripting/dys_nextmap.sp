@@ -10,21 +10,6 @@
 
 #define LINUX_GAMERULES_GETNEXTMAP_NAME "@_ZN13CDYSGameRules16GetNextLevelNameEPci"
 
-bool IsLinux()
-{
-    static bool first_run = true;
-    static bool found;
-    if (first_run)
-    {
-        first_run = !first_run;
-        StartPrepSDKCall(SDKCall_GameRules);
-        char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
-        found = PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
-        EndPrepSDKCall();
-    }
-    return found;
-}
-
 public Plugin myinfo = {
     name = "Dystopia nextmap",
     description = "Print the Dystopia \"nextmap\" value to chat.",
@@ -106,4 +91,19 @@ void PrintNextmap(int client)
     char nextmap[PLATFORM_MAX_PATH];
     SDKCall(call, nextmap, sizeof(nextmap));
     PrintToChat(client, "Next map is %s.", nextmap); // or PrintToChatAll
+}
+
+bool IsLinux()
+{
+    static bool first_run = true;
+    static bool found;
+    if (first_run)
+    {
+        first_run = !first_run;
+        StartPrepSDKCall(SDKCall_GameRules);
+        char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
+        found = PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        EndPrepSDKCall();
+    }
+    return found;
 }
