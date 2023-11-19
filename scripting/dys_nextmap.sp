@@ -15,7 +15,7 @@ public Plugin myinfo = {
     description = "Print the Dystopia \"nextmap\" value to chat.\
 Works both from client console (SRCDS only), and from game chat.",
     author = "Rain",
-    version = "0.1.0",
+    version = "0.2.0",
     url = "https://github.com/bauxiteDYS/SM-DYS-NextMap"
 };
 
