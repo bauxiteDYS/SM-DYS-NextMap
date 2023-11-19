@@ -4,11 +4,11 @@
 #pragma semicolon 1
 #pragma newdecls required
 
-/**
-Print the Dystopia console command "nextmap" value to chat.
-Works both from client console (SRCDS only), and from game chat.
-If this ever breaks with a game update, try flipping the #if(1) switch at around line 69 to #if(0)
-**/
+// If the gamerules vtable index changes too often, flip this to try pattern
+// scanning, instead.
+#define USE_SIGSCAN false
+
+#define LINUX_GAMERULES_GETNEXTMAP_NAME "@_ZN13CDYSGameRules16GetNextLevelNameEPci"
 
 public Plugin myinfo = {
     name = "Dystopia nextmap",
@@ -65,11 +65,20 @@ void PrintNextmap(int client)
     if (call == INVALID_HANDLE)
     {
         StartPrepSDKCall(SDKCall_GameRules);
-#if(1)
-        PrepSDKCall_SetVirtual(0x2B4 / 4);
+#if(!USE_SIGSCAN)
+        int vtable_index = (IsLinux() ? 0x2B8 : 0x2B4) / 4;
+        PrepSDKCall_SetVirtual(vtable_index);
 #else
-        // If the vtable index changes a lot with game updates, this signature scan may work better
-        PrepSDKCall_SetSignature(SDKLibrary_Server, "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00", 9);
+        if (IsLinux())
+        {
+            char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
+            PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        }
+        else
+        {
+            char sig[] = "\x55\x8B\xEC\x8B\x81\xEC\x02\x00\x00";
+            PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        }
 #endif
         PrepSDKCall_AddParameter(SDKType_String, SDKPass_Pointer);
         PrepSDKCall_AddParameter(SDKType_PlainOldData, SDKPass_Plain);
@@ -82,4 +91,19 @@ void PrintNextmap(int client)
     char nextmap[PLATFORM_MAX_PATH];
     SDKCall(call, nextmap, sizeof(nextmap));
     PrintToChat(client, "Next map is %s.", nextmap); // or PrintToChatAll
+}
+
+bool IsLinux()
+{
+    static bool first_run = true;
+    static bool found;
+    if (first_run)
+    {
+        first_run = !first_run;
+        StartPrepSDKCall(SDKCall_GameRules);
+        char sig[] = LINUX_GAMERULES_GETNEXTMAP_NAME;
+        found = PrepSDKCall_SetSignature(SDKLibrary_Server, sig, sizeof(sig) - 1);
+        EndPrepSDKCall();
+    }
+    return found;
 }
